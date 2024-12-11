@@ -1,14 +1,17 @@
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:path/path.dart' as path;
 
 class FFmpegUtil {
   static String? _ffmpegPath;
 
+  static String? get ffmpegPath => _ffmpegPath;
+
   static Future<void> initFFmpeg() async {
     // 获取应用程序运行目录
     final exePath = Platform.resolvedExecutable;
     final appDirectory = path.dirname(exePath);
-
+    debugPrint('App Directory: $appDirectory');
     // FFmpeg 预期位置
     final ffmpegExe = path.join(appDirectory, 'ffmpeg', 'ffmpeg.exe');
 
