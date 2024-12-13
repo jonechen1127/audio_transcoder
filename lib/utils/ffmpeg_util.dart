@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:path/path.dart' as path;
 
@@ -9,11 +10,12 @@ class FFmpegUtil {
 
   static Future<void> initFFmpeg() async {
     // 获取应用程序运行目录
-    final exePath = Platform.resolvedExecutable;
-    final appDirectory = path.dirname(exePath);
+    final String exePath = Platform.resolvedExecutable;
+    final String appDirectory = path.dirname(exePath);
     debugPrint('App Directory: $appDirectory');
+    // Built build\windows\x64\runner\Release\audio_transcoder.exe
     // FFmpeg 预期位置
-    final ffmpegExe = path.join(appDirectory, 'ffmpeg', 'ffmpeg.exe');
+    final String ffmpegExe = path.join(appDirectory, 'ffmpeg', 'ffmpeg.exe');
 
     // 验证 FFmpeg 是否存在
     if (await File(ffmpegExe).exists()) {
@@ -24,13 +26,13 @@ class FFmpegUtil {
   }
 
   static Future<void> convertAudio(String inputFilePath, String outputFilePath, String bitRate, String sampleRate,
-      String channels, String codec) async {
+      String channels, String format) async {
     if (_ffmpegPath == null) {
       throw Exception('FFmpeg not initialized');
     }
 
     try {
-      final result = await Process.run(_ffmpegPath!, [
+      final ProcessResult result = await Process.run(_ffmpegPath!, <String>[
         '-i',
         inputFilePath,
         '-b:a',
@@ -40,7 +42,7 @@ class FFmpegUtil {
         '-ac',
         channels == 'Mono' ? '1' : '2',
         '-c:a',
-        codec,
+        _getCodec(format),
         outputFilePath,
       ]);
 
@@ -49,6 +51,28 @@ class FFmpegUtil {
       }
     } catch (e) {
       throw Exception('Error executing FFmpeg: $e');
+    }
+  }
+
+  /// 获取编码器
+  static String _getCodec(String format) {
+    switch (format) {
+      case 'mp3':
+      case 'mpeg':
+        return 'libmp3lame';
+      case 'ogg':
+      case 'webm':
+        return 'libvorbis';
+      case 'aac':
+      case 'm4a':
+      case 'mp4':
+        return 'aac';
+      case 'flac':
+        return 'flac';
+      case 'opus':
+        return 'libopus';
+      default:
+        return 'copy';
     }
   }
 }
